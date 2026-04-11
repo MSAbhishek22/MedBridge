@@ -23,7 +23,7 @@ if GROQ_API_KEY:
 def google_vision_ocr(image_base64):
     """Performs OCR using Google Vision API via REST."""
     if not GOOGLE_API_KEY:
-        return "GROQ API KEY MISSING. FALLING BACK TO MOCK OCR TEXT."
+        return "GOOGLE API KEY MISSING. PLEASE CONFIGURE IN .ENV"
     
     url = f"https://vision.googleapis.com/v1/images:annotate?key={GOOGLE_API_KEY}"
     payload = {
@@ -74,7 +74,7 @@ def groq_extract(ocr_text):
 def google_translate(text_list, target_lang):
     """Translates a list of strings using Google Translate API REST."""
     if not GOOGLE_API_KEY:
-        return text_list
+        return text_list # Return original if no key
     
     url = f"https://translation.googleapis.com/language/translate/v2?key={GOOGLE_API_KEY}"
     payload = {
@@ -119,16 +119,15 @@ def scan_prescription():
     ocr_text = google_vision_ocr(image_content)
     print(f"OCR Result: {ocr_text}")
     
-    # 2. Extract
-    parsed_data = groq_extract(ocr_text) or {"medicines": []}
-    
-    # 3. Interactions
-    parsed_data['medicines'] = check_interactions_fda(parsed_data.get('medicines', []))
+    # Safety logic for interactions
+    medicines = parsed_data.get('medicines', [])
+    if medicines:
+        parsed_data['medicines'] = check_interactions_fda(medicines)
     
     return jsonify({
         "id": str(uuid.uuid4()),
         "status": "success",
-        "medicines": parsed_data['medicines'],
+        "medicines": parsed_data.get('medicines', []),
         "ocr_raw": ocr_text,
         "general_advice": "Consult your doctor for specific queries."
     }), 200
