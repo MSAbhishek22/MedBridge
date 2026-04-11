@@ -544,11 +544,12 @@ function ScanApp() {
                         </div>
 
                         {med.interaction_flag && (
-                            <AlertTriangle className="text-rose-500 shrink-0 w-6 h-6 mt-0.5" />
-                            <div>
-                              <h4 className="font-bold text-rose-400 text-lg">{t('interactionWarning')}</h4>
-                              <p className="text-sm text-rose-200/80 mt-1.5 leading-relaxed">{med.interaction_note}</p>
-                            </div>
+                          <div className="mt-6 p-5 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex gap-4 items-start">
+                             <AlertTriangle className="text-rose-500 shrink-0 w-6 h-6 mt-0.5" />
+                             <div>
+                               <h4 className="font-bold text-rose-400 text-lg">{t('interactionWarning')}</h4>
+                               <p className="text-sm text-rose-200/80 mt-1.5 leading-relaxed">{med.interaction_note}</p>
+                             </div>
                           </div>
                         )}
                       </div>
