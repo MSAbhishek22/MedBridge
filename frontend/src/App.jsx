@@ -403,7 +403,8 @@ function ScanApp() {
     try {
       const formData = new FormData();
       formData.append('image', file);
-      const response = await fetch('http://localhost:5000/api/scan', {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const response = await fetch(`${apiUrl}/api/scan`, {
         method: 'POST',
         body: formData
       });
@@ -432,7 +433,8 @@ function ScanApp() {
     
     setIsProcessing(true);
     try {
-      const response = await fetch('http://localhost:5000/api/translate', {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const response = await fetch(`${apiUrl}/api/translate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ target_language: l, medicines: result.medicines })
