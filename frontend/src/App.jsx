@@ -361,15 +361,19 @@ function ScanApp() {
         body: formData
       });
       const data = await response.json();
-      if (data && data.medicines) {
+      console.log('API Response:', data);
+      
+      if (data && data.medicines && data.medicines.length > 0) {
         setResult(data);
       } else {
-        console.error('Unexpected response:', data);
-        alert('Could not extract medicines. Please try a clearer image.');
+        const errorMsg = data?.error || 'Could not extract medicines. Please try a clearer, well-lit photo.';
+        alert(errorMsg);
+        setFile(null);
       }
     } catch (error) {
       console.error('Upload error:', error);
-      alert('Failed to connect to backend. Is the server running on port 5000?');
+      alert('Failed to connect to backend. Make sure the server is running on port 5000.');
+      setFile(null);
     } finally {
       setIsProcessing(false);
     }
