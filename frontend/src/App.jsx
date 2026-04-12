@@ -1,7 +1,7 @@
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 import { motion, useMotionValue, useSpring, AnimatePresence } from 'framer-motion';
-import { FileText, MapPin, Pill, Activity, ArrowRight, UploadCloud, CheckCircle2, AlertTriangle, X, ScanFace, Languages, HeartPulse, Stethoscope, ShieldCheck, Globe } from 'lucide-react';
+import { FileText, MapPin, Pill, Activity, ArrowRight, UploadCloud, CheckCircle2, AlertTriangle, X, ScanFace, Languages, HeartPulse, Stethoscope, ShieldCheck, Globe, Volume2 } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -43,7 +43,8 @@ const translations = {
     viewMap: "View Global Map",
     uploadTitle: "Upload Prescription",
     uploadDesc: "Drag & drop or snap a picture of your handwritten document.",
-    processBtn: "Process with AI"
+    processBtn: "Process with AI",
+    interactionWarning: "Drug Interaction Warning"
   },
   hi: {
     heroTitle1: "अपनी",
@@ -70,7 +71,8 @@ const translations = {
     viewMap: "ग्लोबल मैप देखें",
     uploadTitle: "नुस्खा अपलोड करें",
     uploadDesc: "खींचे और छोड़ें या अपने दस्तावेज़ की तस्वीर लें।",
-    processBtn: "AI के साथ प्रोसेस करें"
+    processBtn: "AI के साथ प्रोसेस करें",
+    interactionWarning: "दवाओं का प्रभाव (Drug Interaction)"
   },
   ta: {
     heroTitle1: "உங்கள்",
@@ -81,7 +83,14 @@ const translations = {
     openApp: "பயன்பாட்டைத் திற",
     howItWorks: "MedBridge எப்படி வேலை செய்கிறது",
     feature1Title: "AI விஷன் ஸ்கேனிங்",
-    feature2Title: "FDA தொடர்பு சரிபார்ப்பு"
+    feature2Title: "FDA தொடர்பு சரிபார்ப்பு",
+    interactionWarning: "மருந்து தொடர்பு எச்சரிக்கை"
+  },
+  bn: {
+    interactionWarning: "ওষুধের মিথস্ক্রিয়া"
+  },
+  te: {
+    interactionWarning: "డ్రగ్ ఇంటరాక్షన్"
   }
 };
 
@@ -348,6 +357,44 @@ function ScanApp() {
   const [result, setResult] = useState(null);
   const [targetLanguage, setTargetLanguage] = useState('en');
   const [showMap, setShowMap] = useState(false);
+  const [userLocation, setUserLocation] = useState(null);
+  const [isLocating, setIsLocating] = useState(false);
+
+  const speakText = (text, langCode) => {
+    if (!('speechSynthesis' in window)) {
+      alert("Text-to-speech is not supported in this browser.");
+      return;
+    }
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    const voiceMap = { 'en': 'en-US', 'hi': 'hi-IN', 'ta': 'ta-IN', 'bn': 'bn-IN', 'te': 'te-IN' };
+    utterance.lang = voiceMap[langCode] || 'en-US';
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const handleMapOpen = () => {
+    setIsLocating(true);
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation([position.coords.latitude, position.coords.longitude]);
+          setShowMap(true);
+          setIsLocating(false);
+        },
+        (error) => {
+          console.error("Location error:", error);
+          setUserLocation([19.0760, 72.8777]);
+          setShowMap(true);
+          setIsLocating(false);
+        },
+        { timeout: 5000, maximumAge: 0 }
+      );
+    } else {
+      setUserLocation([19.0760, 72.8777]);
+      setShowMap(true);
+      setIsLocating(false);
+    }
+  };
 
   const handleUpload = async () => {
     if (!file) return;
@@ -547,7 +594,17 @@ function ScanApp() {
                               <Pill className="text-brand-400 w-10 h-10 relative z-10" />
                            </div>
                            <div className="space-y-1">
-                             <h3 className="text-3xl font-black text-white tracking-tight">{med.name}</h3>
+                             <div className="flex items-center gap-3">
+                               <h3 className="text-3xl font-black text-white tracking-tight">{med.name}</h3>
+                               <button
+                                 onClick={() => speakText(`${med.name}. ${med.dosage}. ${med.purpose}.`, targetLanguage)}
+                                 className="p-2 rounded-full bg-slate-800/80 hover:bg-brand-500/20 text-brand-400 transition-colors"
+                                 title="Listen"
+                                 aria-label="Listen to medicine info"
+                               >
+                                  <Volume2 className="w-5 h-5" />
+                               </button>
+                             </div>
                              <div className="flex items-center gap-3">
                                <span className="text-xs font-black text-white bg-brand-500 px-4 py-1.5 rounded-full tracking-widest">{med.dosage}</span>
                                {med.interaction_flag && (
@@ -609,11 +666,12 @@ function ScanApp() {
                </div>
                <motion.button 
                  whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-                 onClick={() => setShowMap(true)} 
-                 className="relative z-10 w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-4 bg-white text-dark-900 font-bold rounded-2xl hover:bg-brand-50 transition-colors shadow-lg"
+                 onClick={handleMapOpen} 
+                 disabled={isLocating}
+                 className="relative z-10 w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-4 bg-white text-dark-900 font-bold rounded-2xl hover:bg-brand-50 transition-colors shadow-lg disabled:opacity-75 disabled:cursor-not-allowed"
                >
                   <MapPin className="w-5 h-5" />
-                  {t('viewMap')}
+                  {isLocating ? 'Locating...' : t('viewMap')}
                </motion.button>
              </div>
           </motion.div>
@@ -638,15 +696,20 @@ function ScanApp() {
                   </button>
                 </div>
                 <div className="flex-1 w-full bg-slate-900">
-                  <MapContainer center={[19.0760, 72.8777]} zoom={13} style={{ height: '500px', width: '100%' }}>
+                  <MapContainer center={userLocation || [19.0760, 72.8777]} zoom={13} style={{ height: '100%', minHeight: '60vh', width: '100%' }}>
                     <TileLayer
                       url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                       attribution='&copy; OpenStreetMap'
                     />
-                    <Marker position={[19.0760, 72.8777]}>
+                    {userLocation && (
+                      <Marker position={userLocation}>
+                        <Popup><b>You are here</b></Popup>
+                      </Marker>
+                    )}
+                    <Marker position={userLocation ? [userLocation[0] + 0.005, userLocation[1] + 0.005] : [19.0760, 72.8777]}>
                       <Popup><b>Apollo Pharmacy</b> <br /> 0.8 km away. Open 24/7.</Popup>
                     </Marker>
-                    <Marker position={[19.0810, 72.8800]}>
+                    <Marker position={userLocation ? [userLocation[0] - 0.008, userLocation[1] + 0.01] : [19.0810, 72.8800]}>
                       <Popup><b>Wellness Forever</b> <br /> 1.2 km away.</Popup>
                     </Marker>
                   </MapContainer>
