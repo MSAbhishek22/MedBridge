@@ -119,6 +119,9 @@ def scan_prescription():
     ocr_text = google_vision_ocr(image_content)
     print(f"OCR Result: {ocr_text}")
     
+    # 2. Extract
+    parsed_data = groq_extract(ocr_text) or {"medicines": []}
+    
     # Safety logic for interactions
     medicines = parsed_data.get('medicines', [])
     if medicines:

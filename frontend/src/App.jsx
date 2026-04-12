@@ -349,8 +349,7 @@ function ScanApp() {
   const [targetLanguage, setTargetLanguage] = useState('en');
   const [showMap, setShowMap] = useState(false);
 
-  const handleUpload = async (e) => {
-    e.preventDefault();
+  const handleUpload = async () => {
     if (!file) return;
     
     setIsProcessing(true);
@@ -362,9 +361,15 @@ function ScanApp() {
         body: formData
       });
       const data = await response.json();
-      setResult(data);
+      if (data && data.medicines) {
+        setResult(data);
+      } else {
+        console.error('Unexpected response:', data);
+        alert('Could not extract medicines. Please try a clearer image.');
+      }
     } catch (error) {
-      console.error(error);
+      console.error('Upload error:', error);
+      alert('Failed to connect to backend. Is the server running on port 5000?');
     } finally {
       setIsProcessing(false);
     }
@@ -422,12 +427,23 @@ function ScanApp() {
         {!result && !isProcessing && (
           <motion.div 
             initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}
-            className="glass-panel p-10 sm:p-24 text-center rounded-[3rem] border-2 border-dashed border-white/10 hover:border-brand-500/50 transition-all cursor-pointer group hover:shadow-[0_0_80px_rgba(6,182,212,0.1)] relative overflow-hidden"
+            className="glass-panel p-10 sm:p-24 text-center rounded-[3rem] border-2 border-dashed border-white/10 hover:border-brand-500/50 transition-all group hover:shadow-[0_0_80px_rgba(6,182,212,0.1)] relative overflow-hidden"
           >
              <div className="absolute inset-0 bg-gradient-to-b from-brand-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-             <input type="file" id="file" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" aria-label={t('uploadTitle')} onChange={(e) => setFile(e.target.files[0])} />
              
-             <div className="space-y-8 relative z-10 pointer-events-none">
+             {/* Only show full-card file input when NO file is selected */}
+             {!file && (
+               <input 
+                 type="file" 
+                 id="file" 
+                 accept="image/*" 
+                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" 
+                 aria-label={t('uploadTitle')} 
+                 onChange={(e) => setFile(e.target.files[0])} 
+               />
+             )}
+             
+             <div className="space-y-8 relative z-10">
                 <div className="w-28 h-28 mx-auto rounded-[2rem] bg-dark-900 flex items-center justify-center group-hover:scale-110 group-hover:rotate-3 transition-all duration-700 shadow-2xl border border-white/5 relative">
                   <div className="absolute inset-0 bg-brand-500/20 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
                   <UploadCloud className="w-14 h-14 text-brand-400 relative z-10" />
@@ -437,20 +453,28 @@ function ScanApp() {
                     {file ? file.name : t('uploadTitle')}
                   </h3>
                   <p className="text-slate-400 text-xl max-w-lg mx-auto leading-relaxed">
-                    {file ? "Perfect! Now let's decode this medical mystery." : t('uploadDesc')}
+                    {file ? "Ready to decode this prescription." : t('uploadDesc')}
                   </p>
                 </div>
                 {file && (
-                  <motion.button 
-                    initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
-                    onClick={handleUpload} 
-                    className="btn-primary relative z-30 pointer-events-auto"
-                  >
-                    <div className="flex items-center gap-3">
-                      <Activity className="w-6 h-6" />
-                      <span>{t('processBtn')}</span>
-                    </div>
-                  </motion.button>
+                  <div className="flex items-center justify-center gap-4">
+                    <motion.button 
+                      initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
+                      onClick={handleUpload}
+                      className="btn-primary"
+                    >
+                      <div className="flex items-center gap-3">
+                        <Activity className="w-6 h-6" />
+                        <span>{t('processBtn')}</span>
+                      </div>
+                    </motion.button>
+                    <button 
+                      onClick={() => setFile(null)}
+                      className="px-6 py-3 rounded-2xl border border-white/10 text-slate-400 hover:text-white hover:border-white/30 transition-all font-bold text-sm"
+                    >
+                      Change File
+                    </button>
+                  </div>
                 )}
              </div>
           </motion.div>
