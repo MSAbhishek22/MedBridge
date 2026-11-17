@@ -23,8 +23,8 @@ MedBridge follows a focused journey from confusion to confidence:
 
 ```mermaid
 graph TD
-    A[📄 A Messy Prescription] -->|Google Vision AI| B(The Digitized Insight)
-    B -->|Groq LLaMA 3.1| C{The Medical Brain}
+    A[📄 A Messy Prescription] -->|Groq Llama 4 Scout Vision| B(The Digitized Insight)
+    B -->|Groq LLaMA| C{The Medical Brain}
     C -->|Extract| D[Names, Dosages, Timings]
     C -->|FDA Safety Check| E[Interaction Warnings]
     D & E -->|Google Translate| F[Your Native Tongue]
@@ -49,20 +49,29 @@ We believe that health data should be as beautiful as it is useful.
 
 ---
 
+## 🧰 Tech Stack
+- **Frontend:** React 19 + Vite, Tailwind CSS, Leaflet / React Leaflet (pharmacy map), Framer Motion, Spline
+- **Backend:** Flask API in `api/index.py`, served as a Vercel serverless function (see `vercel.json`)
+- **AI:** Groq — Llama 4 Scout vision model reads the prescription image and extracts structured medicine data in a single call
+- **Keys:** `GROQ_API_KEY` (and optionally `GOOGLE_API_KEY`) are read from environment variables — never commit them
+
+---
+
 ## 🛠️ The Developer's Path
 Bring MedBridge to your local environment in minutes.
 
 <details>
 <summary><b>1. The Heart (Backend Setup)</b></summary>
 
+The backend is a single Flask app at `api/index.py`, with dependencies in the root `requirements.txt`. On Vercel it runs as a serverless function; locally:
+
 ```bash
-cd backend
 python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
-cp .env.example .env
-# Add GOOGLE_API_KEY and GROQ_API_KEY here
-python app.py
+# Create a .env file in the repo root with:
+# GROQ_API_KEY=your-key-here
+flask --app api.index run   # or use `vercel dev` to run API + frontend together
 ```
 </details>
 
